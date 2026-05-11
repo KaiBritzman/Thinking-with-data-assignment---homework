@@ -2,4 +2,4 @@
 
 On the right-hand side, you will see a link to a github page. Click that, and it will bring you to my quarto website with my answers to the assginment questions. 
 
-Upon clicking, you will be brought to a homepage. Click the assignment button in the navigation bar at the top and you will see my answers to the questions.
+Upon clicking, you will be brought to a homepage. Click the button that says "Portfolio homework assignment" in the navigation bar at the top and you will see my answers to the questions.

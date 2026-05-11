@@ -1,0 +1,475 @@
+---
+title: "Portfolio homework assignment"
+format: html
+editor: visual
+---
+
+## Question 1
+
+```{r}
+x <- c(3.1, NA, 4.7, 2.9, NA, 5.0)
+
+#extract the positions (indices) of the missing values
+which(is.na(x))
+
+#extract all non-missing values
+x[c(-2, -5)]
+x
+#replace missing values with the mean of non missing values
+x <- replace(x, is.na(x), mean(x, na.rm = TRUE))
+x
+#showing mean of x now returns a number
+mean(x)
+```
+
+## Question 2
+
+```{r}
+df <- data.frame(
+id = 1:8,
+site = c("A", "A", "B", "B", "A", "C", "C", "B"),
+treatment = c("control", "drug", "control", "drug", "drug", "control", "drug", "control"),
+score = c(12, 15, 9, 18, 14, 11, 20, 10)
+)
+#subset rows where site is A or C
+subset1 <- subset(df, site %in% c("A", "C"))
+subset1
+
+#subset rows where treatment is drug and score is at least 15 
+treatment <- subset(df, treatment == "drug" & score >= 15)
+treatment
+
+#create new object containing only the columns id, treatment and score
+new_object <- data.frame(
+  df$id, df$treatment, df$score
+)
+new_object
+```
+
+The difference between & and \| is & means "and" and \| means "or".
+
+## Question 3
+
+```{r}
+vals <- c("1", "2", "3", "4")
+
+# Check if vals is numeric
+is.numeric(vals)
+
+#converting vals into numeric
+vals <- as.numeric(vals)
+is.numeric(vals)
+
+#compute mean
+mean(vals)
+```
+
+Silent coercion can be dangerous because it can lead to unexpected results and if you are analysing it, it may lead to the wrong conclusions. Also, your data can turn into values you don't expect like TRUE and FALSE turning into 1 and 0, which could lead to misleading information.
+
+## Question 4
+
+```{r}
+grades <- c("merit", "pass", "distinction", "pass", "merit", "pass")
+
+# Converting grades to a factor with ordered levels(pass, merit, distinction)
+
+grades <- factor(
+  c("merit", "pass", "distinction", "pass", "merit", "pass"),
+  levels = c("pass", "merit", "distinction"),
+  ordered = TRUE
+)
+
+#showing levels and confirm ordering
+levels(grades)
+
+is.ordered(grades)
+
+#computing frequency table
+table(grades)
+```
+
+Ordered factors matter for plots because it can make reading comparison models easier. Unordered factors won't show progression from low to high or high to low.
+
+## Question 5
+
+```{r}
+dates_chr <- c("2026-01-05", "2026-01-12", "2026-02-01", "not_a_date")
+
+# converting to date vector
+dates_chr <- as.Date(dates_chr)
+class(dates_chr) #check its been converted correctly
+
+# identifying which elements failed to parse
+is.na(dates_chr)
+
+#removing invalid dates & computing number of days between earliest and latest valid date
+dates_chr <- dates_chr[-4]
+dates_chr
+
+difference <- max(dates_chr) - min(dates_chr)
+difference
+```
+
+Date parsing often creates NAs because the data class could be incorrect. For example, "not_a_date" will be NA because it isn't numeric, so when converted R won't parse it.
+
+## Question 6
+
+```{r}
+messy <- data.frame(
+  sample_id = c("S1", "S2", "S3", "S4"),
+  nitrate = c("12.1", "11.8", "missing", "13.0"),
+  ph = c(6.2, 6.5, 6.1, 6.4),
+  stringsAsFactors = FALSE
+)
+#converting nitrate to numeric
+messy$nitrate <- as.numeric(messy$nitrate)
+#reporting how many NAs were created
+which(is.na(messy$nitrate))  #outputs positions of NAs. Counted how many positions were outputted
+
+#There was only 1 NA produced from the conversion
+
+#creating new column
+nitrate_flag <- c()
+
+for (val in messy$nitrate) {
+  nitrate_flag <- c(nitrate_flag, is.na(val))
+}
+#adding new vector to "messy"
+messy$nitrate_flag <- nitrate_flag
+
+#Computing mean nitrate ignoring NAs
+mean(messy$nitrate, na.rm = TRUE)
+```
+
+## Question 7
+
+```{r}
+nm <- c(" Plot ID ", "Yield(kg/ha)", "Soil%Moisture", "2nd reading", "sensor.ID")
+#trim spaces
+nm <- trimws(nm)
+nm
+#convert to lower case
+nm <- tolower(nm)
+nm
+#replacing punctuation and spaces with _
+nm <- gsub("[[:punct:][:space:]]", "_", nm)
+
+#collapse multiple _ to a single _
+gsub("_+", "_", nm)  #the + means one or more _ should be replaced with one _
+
+#ensure names do not start with a digit 
+nm_clean <- make.names(nm, unique = FALSE)  #make.names will make all names in vectors are valid
+#return nm_clean
+nm_clean
+```
+
+## Question 8
+
+```{r}
+set.seed(21)
+wide <- data.frame(
+plot = paste0("P", 1:6),
+y_2024 = rnorm(6, 5.0, 0.6),
+y_2025 = rnorm(6, 5.4, 0.6),
+y_2026 = rnorm(6, 5.2, 0.6)
+)
+
+#reshape wide into long format (base R) and long formatting having the columns plot, year and yield
+new_wide <- reshape(wide, varying = c("y_2024", "y_2025", "y_2026"), v.names = "yield", timevar = "year", times = c("2024", "2025", "2026"), direction = "long")
+new_wide
+#computing mean and sd of yield per year
+aggregate(
+  x = new_wide$yield,
+  by = list(year = new_wide$year),
+  FUN = mean
+)
+
+aggregate(
+  x = new_wide$yield,
+  by = list(year = new_wide$year),
+  FUN = sd
+)
+```
+
+Long format is more convenient because it makes it so repeated values can be in rows rather than columns. For example, before we had an extra 3 columns, one for each year but now in long format, they are in one column.
+
+## Question 9
+
+```{r}
+library(tidyr)
+
+long2 <- data.frame(
+  id = rep(1:3, each = 2),
+  time = rep(c("pre", "post"), times = 3),
+  height = c(10, 12, 9, 11, 13, 14),
+  weight = c(20, 22, 19, 21, 23, 24)
+)
+
+#pivot long2 to wide so that you can get columns like height_pre etc
+wide <- pivot_wider(long2,
+          names_from = time,
+          values_from = c(height, weight))
+#checking results
+str(wide)
+#compute the change scores
+wide$height_post - wide$height_pre
+wide$weight_post - wide$weight_pre
+```
+
+## Question 10
+
+```{r}
+left_tbl <- data.frame(
+plot = c("P-01", "P-02", "P-03", "P-04"),
+yield = c(5.1, 5.4, 5.0, 5.6),
+stringsAsFactors = FALSE
+)
+right_tbl <- data.frame(
+plot = c("P01", "P02", "P03", "P05"),
+soil = c("clay", "silt", "sand", "peat"),
+stringsAsFactors = FALSE
+)
+
+#standardise the plot ISs so the join works
+left_tbl$plot <- gsub("-", "", left_tbl$plot)
+left_tbl
+
+#merge the tables and keep only matching rows
+merged_tbl <- merge(left_tbl, right_tbl, by = "plot")
+merged_tbl
+
+#identify which plots were missing from each side
+left_tbl$plot
+right_tbl$plot
+```
+
+When join keys are inconsistent, like "P-O1" and "PO1", this will make them not match when merging them. This will result in NA's. This will mean data could be lost and this could be important data needed for analysis, like business data.
+
+## Question 11
+
+```{r}
+a <- data.frame(id = c(1, 2, 2, 3), score = c(10, 12, 13, 9))
+b <- data.frame(id = c(1, 2, 3, 3), group = c("X", "Y", "Y", "Z"))
+
+# merge a and b by id
+merged <- merge(a, b, by = "id")
+merged
+
+#report number of rows in merged output
+nrow(merged)
+
+#Explain why row count increased
+#This is because the ids didn't align. For the final two values, each data frame has a different number, so they are added to id rather than merged. So instead of "1, 2, 3, 3", its "1, 2, 2, 3, 3", because the last 2 values aren't aligned. 
+
+#create a and b with unique IDs and merge again
+a <- data.frame(id = c(4, 5, 6, 7))
+b <- data.frame(id = c(5, 6, 7, 8))
+merged2 <- merge(a, b, by = "id")
+merged2
+```
+
+## Question 12
+
+```{r}
+#create data frame labels with car names and a new variable with two levels
+data(mtcars)
+
+labels <- data.frame(
+  names = rownames(mtcars),
+  eff_band = ifelse(mtcars$mpg >= 20,
+                     "efficient",
+                     "inefficient")
+    )
+
+#merge mtcars with labels by car names
+merged_df <- merge(mtcars, labels, by.x = "row.names", by.y = "names")
+
+#create scatter plot
+colours <- ifelse(merged_df$eff_band == "efficient",
+                  "blue",
+                  "red")
+plot(merged_df$wt, merged_df$mpg, main="Scatter Plot", col = colours)
+#add legend with exactly two entries
+legend(
+  "topright",
+  legend = c("efficient", "inefficient"),
+)
+```
+
+## Question 13
+
+```{r}
+data(mtcars)
+summarise_cols <- function(df, column) {
+  if (!(column %in% names(df))) {
+    print("The column name isnt present")
+  }
+  if (!is.numeric(df[[column]])) {
+    print("The column isnt numeric")
+  }
+}
+
+  
+summarise_cols(mtcars, "mpg")
+summarise_cols(mtcars, "hp")
+summarise_cols(mtcars, "wt")
+```
+
+Using \[\[ is safer than \$ in functions because \$ expects the literal column name from the data set. However, \[\[ is more flexible so it better to use in functions.
+
+## Question 14
+
+```{r}
+d1 <- iris[1:50, c("Sepal.Length", "Sepal.Width")]
+d2 <- iris[51:100, c("Sepal.Length", "Sepal.Width")]
+d3 <- iris[101:150, c("Sepal.Length", "Sepal.Width")]
+L <- list(d1, d2, d3)
+
+#using lapply to compute the correlation between Sepal.Length and Sepal.Width in each element
+
+results <- lapply(L, function(L) {
+  cor(L$Sepal.Length, L$Sepal.Width)
+})
+results
+
+#combining data frames into one
+new_L <- do.call(rbind, L)
+#computing correlation again on combined data
+new_results <- do.call(rbind, new_L)
+new_results
+```
+
+do.call(rbind,...) combines many smaller data frames into one big data frame. do.call() will take a list and get all the smaller data frames in it. rbind will then stack each individual data frame on top of each other to make rows, which creates one big data frame.
+
+## Question 15
+
+```{r}
+M <- matrix(1:12, nrow = 3, byrow = TRUE)
+colnames(M) <- c("A", "B", "C", "D")
+
+#convert M into a data frame
+DF <- data.frame(M)
+DF
+#add a non-numeric column as a factor
+band <-  c("low", "high", "low") 
+DF$band <- as.factor(band)
+
+#showing colSums (M) works but colSums (D) acts differently
+colSums(M)
+colSums(DF[sapply(DF, is.numeric)]) #needed for quarto to render it
+```
+
+Matrices must be homogeneous because they are essentially one vector, and vectors can only have one data type. So, matrices must be homogeneous for them to work properly. Data frames can be heterogeneous because they contain multiple vectors, so they can vary in data types.
+
+## Question 16
+
+```{r}
+set.seed(202)
+pop <- rexp(5000, rate = 1/10)
+
+#take 100 samples of size 10, compute mean each time, store them
+new_sample <- mean(sample(pop, 10))
+new_sample
+#repeat for 40 samples
+new_sample2 <- mean(sample(pop, 40))
+new_sample2
+#plot two histograms
+plot(new_sample, main = "histogram") 
+
+plot(new_sample2, main = "histogram")
+```
+
+what changes is that the sample with size 40 is more accurate. This is because we use more data so therefore the mean will be more accurate to the population mean.
+
+## Question 17
+
+```{r}
+set.seed(77)
+x <- rnorm(18, mean = 5.5, sd = 1.2)
+
+#compute a 95% CI for the mean by hand
+y <- mean(x)
+z <- sd(x) 
+critical_value <- qt(0.95, df = y, z)
+
+# running t-test(x) to compare intervals
+t.test(x)
+```
+
+The t critical value is very important because it helps determine the statistical significance of results. Its compared to the t_test() results to see if it falls within the 95% interval.
+
+## Question 18
+
+```{r}
+set.seed(88)
+A <- rnorm(20, mean = 50, sd = 6)
+B <- rnorm(22, mean = 54, sd = 9)
+
+#make side-by-side boxplots of A and B
+boxplot(A, B)
+#compute mean and SD for each group
+mean(A)
+mean(B)
+sd(A)
+sd(B)
+#running two-sample t-test
+t.test(A, B)
+```
+
+The boxplot shows that B has more variance than A. Both having equal variance therefore isn't true. However, means are very similar from the T-test but this doesn't show equal variance. So, their variance isn't equal but suggests central tendency (data's central location) is.
+
+## Question 19
+
+```{r}
+data(iris)
+
+#revel species so that virginica is the reference
+iris$Species <- relevel(iris$Species, ref = "virginica")
+iris$Species
+#fit sepal.length - species
+model <- lm(Sepal.Length ~ Species, data = iris)
+
+#showing coefficient table
+summary(model)
+```
+
+The reference level affects interpretation by comparison. Whatever the reference level is, that is what will be compared to other values. So, instead of looking at them all individually, we can directly compare one value to others. This will help with analysing whether one value is more or less on average than others.
+
+## Question 20
+
+```{r}
+set.seed(909)
+trial <- data.frame(
+plot = rep(paste0("P", 1:12), each = 2),
+treatment = rep(c("control", "treated"), times = 12),
+yield = rnorm(24, mean = 5.0, sd = 0.5)
+)
+trial$yield[trial$treatment == "treated"] <- trial$yield[trial$treatment == "treated"] + 0.3
+
+#convert treatment to a factor and set control as the reference
+trial$treatment <- factor(trial$treatment)
+trial$treatment <- relevel(trial$treatment, ref = "control")
+
+#compute mean yield by treatment
+aggregate(
+  trial$yield,
+  by = list(treatment = trial$treatment),
+  FUN = mean
+)
+
+#boxplot of yield by treatment
+plot(trial$yield, trial$treatment, main = "boxplot")
+#fit linear model yield-treatment and interpret the treatment coefficient in one sentence
+model <- summary(lm(yield ~ treatment, data = trial))
+model
+```
+
+This model closely relates to a two-sample t-test because we are comparing two values. We are comparing control to treatment. We are also using the mean to do this, which is what you also use in a two sample t-test.
+
+# References
+
+**AI was used to check I meet each requirement and to enhance my code**
+
+https://www.rdocumentation.org/ (Accessed 30/04/2026)
+
+https://vle.harper-adams.ac.uk/course/view.php?id=288: **Lecture notes were used to help with syntax**
